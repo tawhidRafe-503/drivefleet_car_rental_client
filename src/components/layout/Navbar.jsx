@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef, useEffect, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { HiOutlineMenu, HiOutlineX, HiOutlineUser } from "react-icons/hi";
+import { HiOutlineMenu, HiOutlineX, HiOutlineUser, HiChevronDown } from "react-icons/hi";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/AuthProvider";
-import LoadingSpinner from "../shared/LoadingSpinner";
 import ThemeToggle from "../shared/ThemeToggle";
 
 const navLinks = [
@@ -17,6 +16,16 @@ const navLinks = [
   { href: "/my-bookings", label: "My bookings", private: true },
   { href: "/my-cars", label: "My added cars", private: true },
 ];
+
+function subscribeMounted() {
+  return () => {};
+}
+function getMountedSnapshot() {
+  return true;
+}
+function getServerMountedSnapshot() {
+  return false;
+}
 
 function UserAvatar({ user }) {
   const [imgError, setImgError] = useState(false);
@@ -53,8 +62,25 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Safely check if mounted without triggering set-state-in-effect warning
+  const mounted = useSyncExternalStore(subscribeMounted, getMountedSnapshot, getServerMountedSnapshot);
+
+  // Close user dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
+    setUserDropdownOpen(false);
     if (menuOpen) setMenuOpen(false);
     await logout();
     toast.success("Logged out successfully");
@@ -62,6 +88,7 @@ export default function Navbar() {
   };
 
   const handleLinkClick = (e, link) => {
+    setUserDropdownOpen(false);
     if (link.private && !user) {
       e.preventDefault();
       toast.error("Please log in to access this page");
@@ -104,45 +131,65 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
-          {loading ? (
-            <LoadingSpinner />
+          {!mounted || loading ? (
+            <div className="h-9 w-20 rounded-full border border-white/10 bg-white/5 animate-pulse" />
           ) : user ? (
-            <div className="dropdown dropdown-end relative">
-              <label
-                tabIndex={0}
-                className="btn btn-ghost flex cursor-pointer items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white hover:bg-white/15"
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setUserDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white transition hover:bg-white/15 focus:outline-none"
               >
                 <UserAvatar user={user} />
                 <span className="text-sm font-medium">{user.name?.split(" ")[0] || "Account"}</span>
-              </label>
-              <ul
-                tabIndex={0}
-                className="dropdown-content menu z-100 mt-2 w-52 rounded-xl border border-white/15 bg-[#0b1d36] p-2 text-slate-200 shadow-2xl backdrop-blur-md"
-              >
-                <li>
-                  <Link href="/add-car" className="hover:bg-white/10 hover:text-white rounded-lg">
-                    Add car
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/my-bookings" className="hover:bg-white/10 hover:text-white rounded-lg">
-                    My bookings
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/my-cars" className="hover:bg-white/10 hover:text-white rounded-lg">
-                    My added cars
-                  </Link>
-                </li>
-                <li className="border-t border-white/10 mt-1 pt-1">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 rounded-lg px-3 py-2"
-                  >
-                    Logout
-                  </button>
-                </li>
-              </ul>
+                <HiChevronDown
+                  className={`text-slate-400 transition-transform duration-200 ${
+                    userDropdownOpen ? "rotate-180" : ""
+                  }`}
+                  size={16}
+                />
+              </button>
+
+              {userDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-white/15 bg-[#08182e] p-2 text-slate-200 shadow-2xl backdrop-blur-md z-50">
+                  <div className="border-b border-white/10 px-3 py-2">
+                    <p className="text-xs font-semibold text-white truncate">{user.name || "User"}</p>
+                    <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+                  </div>
+                  <div className="py-1">
+                    <Link
+                      href="/add-car"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="block rounded-xl px-3 py-2 text-xs font-medium transition hover:bg-white/10 hover:text-white"
+                    >
+                      Add car
+                    </Link>
+                    <Link
+                      href="/my-bookings"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="block rounded-xl px-3 py-2 text-xs font-medium transition hover:bg-white/10 hover:text-white"
+                    >
+                      My bookings
+                    </Link>
+                    <Link
+                      href="/my-cars"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="block rounded-xl px-3 py-2 text-xs font-medium transition hover:bg-white/10 hover:text-white"
+                    >
+                      My added cars
+                    </Link>
+                  </div>
+                  <div className="border-t border-white/10 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="w-full rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <Link
@@ -165,7 +212,7 @@ export default function Navbar() {
       {menuOpen && (
         <div className="border-t border-white/10 bg-[#071427] px-4 py-4 md:hidden">
           <div className="flex flex-col gap-3">
-            {user && (
+            {!mounted || loading ? null : user ? (
               <div className="mb-1 flex items-center gap-3 border-b border-white/10 pb-3">
                 <UserAvatar user={user} />
                 <div>
@@ -173,7 +220,7 @@ export default function Navbar() {
                   <p className="text-xs text-white/60">{user.email}</p>
                 </div>
               </div>
-            )}
+            ) : null}
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -186,7 +233,7 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {user ? (
+            {!mounted || loading ? null : user ? (
               <button
                 className="mt-2 rounded-xl border border-rose-500/40 bg-rose-500/10 py-2.5 text-center text-sm font-semibold text-rose-300 transition hover:bg-rose-500 hover:text-white"
                 onClick={handleLogout}
