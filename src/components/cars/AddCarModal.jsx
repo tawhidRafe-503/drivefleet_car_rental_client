@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { HiOutlinePlus, HiOutlineSparkles } from "react-icons/hi";
+import { HiOutlinePlus, HiOutlineX } from "react-icons/hi";
 
-export default function AddCarPage() {
+export default function AddCarModal({ isOpen, onClose, onCarAdded }) {
   const [formData, setFormData] = useState({
     model: "",
     category: "Sedan",
@@ -15,11 +15,14 @@ export default function AddCarPage() {
   });
   const [loading, setLoading] = useState(false);
 
+  if (!isOpen) return null;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
       toast.success(`"${formData.model || "Vehicle"}" added successfully!`);
+      if (onCarAdded) onCarAdded(formData);
       setFormData({
         model: "",
         category: "Sedan",
@@ -29,28 +32,34 @@ export default function AddCarPage() {
         image: "",
       });
       setLoading(false);
+      onClose();
     }, 400);
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 theme-bg min-h-[85vh]">
-      {/* Page Header */}
-      <div className="text-center max-w-xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-semibold text-cyan-500 mb-3">
-          <HiOutlineSparkles size={14} />
-          Vehicle Listing
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+      <div
+        className="theme-card relative w-full max-w-xl rounded-3xl border p-6 md:p-8 shadow-2xl transition-all duration-300 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b theme-border pb-4 mb-6">
+          <div>
+            <h2 className="font-display text-2xl font-extrabold theme-text">Add New Vehicle</h2>
+            <p className="text-xs theme-text-muted mt-1">List your car on DriveFleet for rental bookings</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="theme-card flex h-8 w-8 items-center justify-center rounded-full border transition hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer"
+            aria-label="Close Modal"
+          >
+            <HiOutlineX size={18} />
+          </button>
         </div>
-        <h1 className="font-display text-3xl font-extrabold theme-text sm:text-4xl">
-          Add a New Vehicle
-        </h1>
-        <p className="theme-text-muted text-sm mt-2">
-          Fill in the details below to list your car on DriveFleet for rental bookings.
-        </p>
-      </div>
 
-      {/* Embedded Form Card */}
-      <div className="theme-card rounded-3xl border p-6 md:p-10 shadow-2xl backdrop-blur-md">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold theme-text uppercase tracking-wider mb-1.5">
               Car Model / Title
@@ -119,7 +128,7 @@ export default function AddCarPage() {
             </label>
             <textarea
               required
-              rows={4}
+              rows={3}
               placeholder="Provide a brief summary highlighting vehicle performance, features, and comfort..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -141,14 +150,22 @@ export default function AddCarPage() {
             />
           </div>
 
-          <div className="pt-3">
+          {/* Footer Actions */}
+          <div className="flex items-center justify-end gap-3 border-t theme-border pt-4 mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border theme-border px-5 py-2.5 text-xs font-semibold theme-text transition hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 disabled:opacity-50 cursor-pointer"
+              className="flex items-center gap-1.5 rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 px-6 py-2.5 text-xs font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 disabled:opacity-50 cursor-pointer"
             >
-              <HiOutlinePlus size={18} />
-              <span>{loading ? "Adding Vehicle..." : "Add Vehicle"}</span>
+              <HiOutlinePlus size={16} />
+              <span>{loading ? "Adding..." : "Add Vehicle"}</span>
             </button>
           </div>
         </form>

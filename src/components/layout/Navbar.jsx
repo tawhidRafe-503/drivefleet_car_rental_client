@@ -38,7 +38,7 @@ function UserAvatar({ user }) {
     .toUpperCase();
 
   return (
-    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-cyan-400/40 bg-linear-to-tr from-cyan-600 to-blue-600 font-semibold text-white shadow-sm">
+    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-cyan-500/40 bg-linear-to-tr from-cyan-600 to-blue-600 font-semibold text-white shadow-sm">
       {avatarUrl ? (
         <Image
           width={32}
@@ -65,10 +65,8 @@ export default function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Safely check if mounted without triggering set-state-in-effect warning
   const mounted = useSyncExternalStore(subscribeMounted, getMountedSnapshot, getServerMountedSnapshot);
 
-  // Close user dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -100,9 +98,9 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#071427]/95 backdrop-blur">
+    <header className="theme-header sticky top-0 z-50 border-b backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-8">
-        <Link href="/" className="font-display flex items-center gap-2.5 text-xl font-bold text-white group">
+        <Link href="/" className="font-display flex items-center gap-2.5 text-xl font-bold theme-text group">
           <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-cyan-400/30 bg-linear-to-br from-cyan-400/20 to-blue-600/20 p-0.5 shadow-md shadow-cyan-500/10 transition-transform duration-300 group-hover:scale-105">
             <Image
               src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=120&q=80"
@@ -121,7 +119,7 @@ export default function Navbar() {
               href={link.href}
               onClick={(e) => handleLinkClick(e, link)}
               className={`text-sm font-medium transition ${
-                pathname === link.href ? "text-cyan-400 font-semibold" : "text-slate-300 hover:text-white"
+                pathname === link.href ? "text-cyan-500 font-semibold" : "theme-text-muted hover:theme-text"
               }`}
             >
               {link.label}
@@ -132,18 +130,18 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
           {!mounted || loading ? (
-            <div className="h-9 w-20 rounded-full border border-white/10 bg-white/5 animate-pulse" />
+            <div className="h-9 w-20 rounded-full border border-cyan-500/20 bg-white/5 animate-pulse" />
           ) : user ? (
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setUserDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white transition hover:bg-white/15 focus:outline-none"
+                className="theme-card flex items-center gap-2.5 rounded-full border px-3 py-1.5 transition hover:opacity-90 focus:outline-none cursor-pointer"
               >
                 <UserAvatar user={user} />
                 <span className="text-sm font-medium">{user.name?.split(" ")[0] || "Account"}</span>
                 <HiChevronDown
-                  className={`text-slate-400 transition-transform duration-200 ${
+                  className={`theme-text-muted transition-transform duration-200 ${
                     userDropdownOpen ? "rotate-180" : ""
                   }`}
                   size={16}
@@ -151,39 +149,39 @@ export default function Navbar() {
               </button>
 
               {userDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-white/15 bg-[#08182e] p-2 text-slate-200 shadow-2xl backdrop-blur-md z-50">
-                  <div className="border-b border-white/10 px-3 py-2">
-                    <p className="text-xs font-semibold text-white truncate">{user.name || "User"}</p>
-                    <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+                <div className="theme-card absolute right-0 top-full mt-2 w-56 rounded-2xl border p-2 shadow-2xl backdrop-blur-md z-50">
+                  <div className="border-b theme-border px-3 py-2">
+                    <p className="text-xs font-semibold theme-text truncate">{user.name || "User"}</p>
+                    <p className="text-[11px] theme-text-muted truncate">{user.email}</p>
                   </div>
                   <div className="py-1">
                     <Link
                       href="/add-car"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="block rounded-xl px-3 py-2 text-xs font-medium transition hover:bg-white/10 hover:text-white"
+                      className="block rounded-xl px-3 py-2 text-xs font-medium theme-text transition hover:bg-cyan-500/10"
                     >
                       Add car
                     </Link>
                     <Link
                       href="/my-bookings"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="block rounded-xl px-3 py-2 text-xs font-medium transition hover:bg-white/10 hover:text-white"
+                      className="block rounded-xl px-3 py-2 text-xs font-medium theme-text transition hover:bg-cyan-500/10"
                     >
                       My bookings
                     </Link>
                     <Link
                       href="/my-cars"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="block rounded-xl px-3 py-2 text-xs font-medium transition hover:bg-white/10 hover:text-white"
+                      className="block rounded-xl px-3 py-2 text-xs font-medium theme-text transition hover:bg-cyan-500/10"
                     >
                       My added cars
                     </Link>
                   </div>
-                  <div className="border-t border-white/10 pt-1">
+                  <div className="border-t theme-border pt-1">
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="w-full rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300"
+                      className="w-full rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-500 transition hover:bg-rose-500/10"
                     >
                       Logout
                     </button>
@@ -203,21 +201,21 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 md:hidden">
           <ThemeToggle />
-          <button className="p-1 text-white" onClick={() => setMenuOpen((v) => !v)} aria-label="Toggle menu">
+          <button className="p-1 theme-text" onClick={() => setMenuOpen((v) => !v)} aria-label="Toggle menu">
             {menuOpen ? <HiOutlineX size={24} /> : <HiOutlineMenu size={24} />}
           </button>
         </div>
       </div>
 
       {menuOpen && (
-        <div className="border-t border-white/10 bg-[#071427] px-4 py-4 md:hidden">
+        <div className="theme-card border-t px-4 py-4 md:hidden">
           <div className="flex flex-col gap-3">
             {!mounted || loading ? null : user ? (
-              <div className="mb-1 flex items-center gap-3 border-b border-white/10 pb-3">
+              <div className="mb-1 flex items-center gap-3 border-b theme-border pb-3">
                 <UserAvatar user={user} />
                 <div>
-                  <p className="text-sm font-semibold text-white">{user.name || "User"}</p>
-                  <p className="text-xs text-white/60">{user.email}</p>
+                  <p className="text-sm font-semibold theme-text">{user.name || "User"}</p>
+                  <p className="text-xs theme-text-muted">{user.email}</p>
                 </div>
               </div>
             ) : null}
@@ -226,7 +224,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`py-1 text-base transition ${
-                  pathname === link.href ? "text-cyan-400 font-semibold" : "text-white/85 hover:text-white"
+                  pathname === link.href ? "text-cyan-500 font-semibold" : "theme-text-muted hover:theme-text"
                 }`}
                 onClick={(e) => handleLinkClick(e, link)}
               >
@@ -235,7 +233,7 @@ export default function Navbar() {
             ))}
             {!mounted || loading ? null : user ? (
               <button
-                className="mt-2 rounded-xl border border-rose-500/40 bg-rose-500/10 py-2.5 text-center text-sm font-semibold text-rose-300 transition hover:bg-rose-500 hover:text-white"
+                className="mt-2 rounded-xl border border-rose-500/40 bg-rose-500/10 py-2.5 text-center text-sm font-semibold text-rose-500 transition hover:bg-rose-500 hover:text-white"
                 onClick={handleLogout}
               >
                 Logout

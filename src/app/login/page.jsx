@@ -46,50 +46,50 @@ function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#071427]/90 p-8 shadow-2xl backdrop-blur-md">
+    <div className="theme-card w-full max-w-md rounded-3xl border p-8 shadow-2xl backdrop-blur-md">
       <div className="text-center">
-        <h1 className="font-display text-3xl font-extrabold text-white">Welcome Back</h1>
-        <p className="mt-2 text-xs text-slate-400">
+        <h1 className="font-display text-3xl font-extrabold theme-text">Welcome Back</h1>
+        <p className="mt-2 text-xs theme-text-muted">
           Sign in to your DriveFleet account to manage bookings and cars
         </p>
       </div>
 
       <form onSubmit={handleLogin} className="mt-8 space-y-4">
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          <label className="block text-xs font-semibold tracking-wider theme-text mb-1.5">
             Email Address
           </label>
           <div className="relative">
-            <HiOutlineMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <HiOutlineMail className="absolute left-3.5 top-1/2 -translate-y-1/2 theme-text-muted" size={18} />
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Your email address"
-              className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:bg-white/10 focus:outline-none"
+              className="theme-card w-full rounded-xl border py-3 pl-10 pr-4 text-sm focus:border-cyan-500 focus:outline-none"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          <label className="block text-xs font-semibold tracking-wider theme-text mb-1.5">
             Password
           </label>
           <div className="relative">
-            <HiOutlineLockClosed className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <HiOutlineLockClosed className="absolute left-3.5 top-1/2 -translate-y-1/2 theme-text-muted" size={18} />
             <input
               type={showPassword ? "text" : "password"}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Your password"
-              className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-10 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:bg-white/10 focus:outline-none"
+              className="theme-card w-full rounded-xl border py-3 pl-10 pr-10 text-sm focus:border-cyan-500 focus:outline-none"
             />
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 theme-text-muted hover:theme-text transition cursor-pointer"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <HiOutlineEye size={18} /> : <HiOutlineEyeOff size={18} />}
@@ -100,30 +100,30 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 disabled:opacity-50"
+          className="w-full rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 disabled:opacity-50 cursor-pointer"
         >
           {loading ? "Signing in..." : "Sign In"}
         </button>
       </form>
 
       <div className="my-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-white/10" />
-        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">or</span>
-        <div className="h-px flex-1 bg-white/10" />
+        <div className="h-px flex-1 theme-border border-t" />
+        <span className="text-[11px] font-semibold uppercase tracking-widest theme-text-muted">or</span>
+        <div className="h-px flex-1 theme-border border-t" />
       </div>
 
       <button
         onClick={handleGoogleLogin}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 hover:border-white/25 disabled:opacity-50"
+        className="theme-card flex w-full items-center justify-center gap-2.5 rounded-xl border py-3 text-sm font-semibold transition hover:border-cyan-500 disabled:opacity-50 cursor-pointer"
       >
         <FcGoogle size={20} />
         <span>Continue with Google</span>
       </button>
 
-      <p className="mt-6 text-center text-xs text-slate-400">
+      <p className="mt-6 text-center text-xs theme-text-muted">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-semibold text-cyan-400 hover:text-cyan-300 hover:underline">
+        <Link href="/register" className="font-semibold text-cyan-500 hover:underline">
           Register now
         </Link>
       </p>
@@ -133,8 +133,8 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
-      <Suspense fallback={<div className="text-xs text-slate-400">Loading form...</div>}>
+    <div className="flex min-h-[80vh] items-center justify-center theme-bg px-4 py-12">
+      <Suspense fallback={<div className="text-xs theme-text-muted">Loading form...</div>}>
         <LoginForm />
       </Suspense>
     </div>

@@ -53,25 +53,25 @@ const mockFeaturedCars = [
 
 export default function AvailableCars() {
   return (
-    <section className="py-20 bg-[#040d1a]">
+    <section className="py-20 theme-bg">
       <div className="mx-auto max-w-6xl px-4 md:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-400 mb-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-500 mb-3">
               <HiOutlineSparkles size={14} />
               Featured Selection
             </div>
-            <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold theme-text sm:text-4xl">
               Explore Our Top Rented Vehicles
             </h2>
-            <p className="mt-2 text-slate-400 text-sm max-w-xl">
+            <p className="mt-2 theme-text-muted text-sm max-w-xl">
               Handpicked, thoroughly inspected cars ready for your next adventure or business trip.
             </p>
           </div>
 
           <Link
             href="/cars"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-500 hover:text-cyan-600 transition"
           >
             <span>View All Fleet</span>
             <HiOutlineArrowRight size={16} />
@@ -83,10 +83,10 @@ export default function AvailableCars() {
           {mockFeaturedCars.map((car) => (
             <div
               key={car.id}
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#071427] transition duration-300 hover:-translate-y-1 hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10"
+              className="theme-card group relative flex flex-col overflow-hidden rounded-2xl border transition duration-300 hover:-translate-y-1 hover:border-cyan-500/50 hover:shadow-xl"
             >
               {/* Image */}
-              <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-900">
+              <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-200 dark:bg-slate-900">
                 <Image
                   src={car.image}
                   alt={car.model}
@@ -96,26 +96,26 @@ export default function AvailableCars() {
                 <div className="absolute top-3 left-3 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] font-semibold text-cyan-300 border border-white/10 backdrop-blur-md">
                   {car.category}
                 </div>
-                <div className="absolute top-3 right-3 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-300 border border-amber-500/30">
+                <div className="absolute top-3 right-3 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-500 border border-amber-500/30 backdrop-blur-md">
                   ★ {car.rating}
                 </div>
               </div>
 
               {/* Content */}
               <div className="flex flex-1 flex-col p-5">
-                <h3 className="font-display text-base font-bold text-white group-hover:text-cyan-400 transition">
+                <h3 className="font-display text-base font-bold theme-text group-hover:text-cyan-500 transition">
                   {car.model}
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">Location: {car.location}</p>
+                <p className="text-xs theme-text-muted mt-1">Location: {car.location}</p>
 
                 {/* Specs */}
-                <div className="mt-4 grid grid-cols-2 gap-2 border-y border-white/10 py-3 text-xs text-slate-300">
+                <div className="mt-4 grid grid-cols-2 gap-2 border-y theme-border py-3 text-xs theme-text-muted">
                   <div className="flex items-center gap-1.5">
-                    <HiOutlineUserGroup className="text-cyan-400" size={16} />
+                    <HiOutlineUserGroup className="text-cyan-500" size={16} />
                     <span>{car.seats} Seats</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <HiOutlineCog className="text-cyan-400" size={16} />
+                    <HiOutlineCog className="text-cyan-500" size={16} />
                     <span>{car.transmission}</span>
                   </div>
                 </div>
@@ -123,13 +123,13 @@ export default function AvailableCars() {
                 {/* Footer / Price */}
                 <div className="mt-auto pt-4 flex items-center justify-between">
                   <div>
-                    <span className="font-display text-lg font-extrabold text-white">${car.pricePerDay}</span>
-                    <span className="text-xs text-slate-400"> / day</span>
+                    <span className="font-display text-lg font-extrabold theme-text">${car.pricePerDay}</span>
+                    <span className="text-xs theme-text-muted"> / day</span>
                   </div>
 
                   <Link
                     href={`/cars/${car.id}`}
-                    className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-500 hover:text-slate-950"
+                    className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-500 transition hover:bg-cyan-500 hover:text-white"
                   >
                     Details
                   </Link>

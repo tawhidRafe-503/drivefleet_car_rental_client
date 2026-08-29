@@ -12,8 +12,24 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-theme="drivefleet">
-      <body className="flex min-h-screen flex-col bg-[#040d1a] text-slate-100 antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var t = localStorage.getItem('drivefleet_theme') || 'dark';
+                  document.documentElement.setAttribute('data-theme', t);
+                  document.documentElement.classList.remove('dark', 'light');
+                  document.documentElement.classList.add(t);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="flex min-h-screen flex-col antialiased">
         <AuthProvider>
           <Navbar />
           <main className="flex-1">{children}</main>

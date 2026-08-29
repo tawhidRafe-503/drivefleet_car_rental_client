@@ -25,14 +25,14 @@ const steps = [
 
 export default function RentalSteps() {
   return (
-    <section className="py-20 bg-[#071427]">
+    <section className="py-20 theme-bg">
       <div className="mx-auto max-w-6xl px-4 md:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-xs font-semibold text-cyan-400 uppercase tracking-widest">How It Works</p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
+          <p className="text-xs font-semibold text-cyan-500 uppercase tracking-widest">How It Works</p>
+          <h2 className="mt-3 font-display text-3xl font-bold theme-text sm:text-4xl">
             Rent a Car in 3 Easy Steps
           </h2>
-          <p className="mt-3 text-slate-400 text-sm">
+          <p className="mt-3 theme-text-muted text-sm">
             Quick, hassle-free booking experience crafted for your convenience.
           </p>
         </div>
@@ -43,18 +43,18 @@ export default function RentalSteps() {
             return (
               <div
                 key={index}
-                className="relative flex flex-col items-center text-center rounded-2xl border border-white/10 bg-[#040d1a] p-8 shadow-lg"
+                className="theme-card relative flex flex-col items-center text-center rounded-2xl border p-8 shadow-lg"
               >
-                <span className="absolute top-4 right-6 font-display text-3xl font-black text-white/10">
+                <span className="absolute top-4 right-6 font-display text-3xl font-black opacity-10 theme-text">
                   {item.step}
                 </span>
 
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/40 bg-linear-to-br from-cyan-500/20 to-blue-600/20 text-cyan-400">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/40 bg-cyan-500/10 text-cyan-500">
                   <Icon size={28} />
                 </div>
 
-                <h3 className="mt-6 font-display text-lg font-bold text-white">{item.title}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-400 max-w-xs">{item.description}</p>
+                <h3 className="mt-6 font-display text-lg font-bold theme-text">{item.title}</h3>
+                <p className="mt-2 text-xs leading-relaxed theme-text-muted max-w-xs">{item.description}</p>
               </div>
             );
           })}

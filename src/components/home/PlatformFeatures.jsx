@@ -27,14 +27,14 @@ const features = [
 
 export default function PlatformFeatures() {
   return (
-    <section className="py-20 bg-linear-to-b from-[#040d1a] to-[#071427] border-y border-white/5">
+    <section className="py-20 theme-bg border-y theme-border">
       <div className="mx-auto max-w-6xl px-4 md:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-xs font-semibold text-cyan-400 uppercase tracking-widest">Why DriveFleet</p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
+          <p className="text-xs font-semibold text-cyan-500 uppercase tracking-widest">Why DriveFleet</p>
+          <h2 className="mt-3 font-display text-3xl font-bold theme-text sm:text-4xl">
             Designed for Seamless Travel
           </h2>
-          <p className="mt-3 text-slate-400 text-sm">
+          <p className="mt-3 theme-text-muted text-sm">
             We simplify car rental so you can focus entirely on enjoying your trip with complete peace of mind.
           </p>
         </div>
@@ -45,13 +45,13 @@ export default function PlatformFeatures() {
             return (
               <div
                 key={index}
-                className="group rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition duration-300 hover:border-cyan-500/40 hover:bg-white/10"
+                className="theme-card group rounded-2xl border p-6 backdrop-blur-sm transition duration-300 hover:border-cyan-500/40 hover:shadow-lg"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/10 text-cyan-400 transition group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-slate-950">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-500 transition group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-white">
                   <Icon size={24} />
                 </div>
-                <h3 className="mt-5 font-display text-base font-bold text-white">{item.title}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-400">{item.description}</p>
+                <h3 className="mt-5 font-display text-base font-bold theme-text">{item.title}</h3>
+                <p className="mt-2 text-xs leading-relaxed theme-text-muted">{item.description}</p>
               </div>
             );
           })}
