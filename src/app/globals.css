@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+.font-display {
+  font-family: "Sora", ui-sans-serif, system-ui, sans-serif;
+}
