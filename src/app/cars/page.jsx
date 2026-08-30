@@ -1,15 +1,51 @@
-import AvailableCars from "@/components/home/AvailableCars";
+import { Suspense } from "react";
+import CarFilterBar from "@/components/cars/CarFilterBar";
+import CarCard from "@/components/cars/CarCard";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
-export default function CarsPage() {
+async function getCars(searchParams) {
+  const params = new URLSearchParams();
+  if (searchParams?.search) params.set("search", searchParams.search);
+  if (searchParams?.type) params.set("type", searchParams.type);
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cars?${params.toString()}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.cars || data || [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function ExploreCarsPage({ searchParams }) {
+  const resolvedParams = await searchParams;
+  const cars = await getCars(resolvedParams);
+
   return (
-    <div className="py-12 theme-bg min-h-screen transition-colors duration-300">
-      <div className="mx-auto max-w-6xl px-4 md:px-8 mb-6">
-        <h1 className="font-display text-3xl font-bold theme-text">Explore Available Cars</h1>
-        <p className="theme-text-muted text-sm mt-1">
-          Browse our complete vehicle fleet across all categories and locations.
-        </p>
+    <div className="mx-auto max-w-6xl px-4 py-12 md:px-8">
+      <h1 className="font-display text-3xl font-extrabold">Explore cars</h1>
+      <p className="mt-1 text-base-content/60">Browse every listing, available or not.</p>
+
+      <div className="mt-8">
+        <Suspense fallback={<LoadingSpinner />}>
+          <CarFilterBar />
+        </Suspense>
       </div>
-      <AvailableCars />
+
+      {cars.length === 0 ? (
+        <p className="mt-16 text-center text-base-content/60">
+          No cars match your search. Try a different name or type.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {cars.map((car) => (
+            <CarCard key={car._id} car={car} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
