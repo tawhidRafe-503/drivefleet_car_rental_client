@@ -4,7 +4,7 @@ const ConfirmDeleteModal = ({ open, title, onCancel, onConfirm, loading }) => {
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 px-4">
             <div className="w-full max-w-sm rounded-2xl bg-base-100 p-6 shadow-xl">
                 <h3 className="font-display text-lg font-semibold">Delete this listing?</h3>
                 <p className="mt-2 text-sm text-base-content/70">
