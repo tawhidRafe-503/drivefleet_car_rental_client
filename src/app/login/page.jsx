@@ -25,8 +25,8 @@ function LoginForm() {
       await loginWithEmail(email, password);
       toast.success("Logged in successfully!");
       router.push(redirectTo);
-    } catch {
-      toast.error("Failed to log in. Please try again.");
+    } catch (err) {
+      toast.error(err?.message || "Failed to log in. Please try again.");
     } finally {
       setLoading(false);
     }

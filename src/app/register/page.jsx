@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthProvider";
 import toast from "react-hot-toast";
 import { HiOutlineUser, HiOutlineMail, HiOutlineLockClosed, HiOutlinePhotograph, HiOutlineEye, HiOutlineEyeOff } from "react-icons/hi";
@@ -17,8 +17,6 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const { registerWithEmail, loginWithGoogle } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/";
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -30,8 +28,8 @@ function RegisterForm() {
     setLoading(true);
     try {
       await registerWithEmail({ name, email, photoURL, password });
-      toast.success("Account registered successfully!");
-      router.push(redirectTo);
+      toast.success("Account registered successfully! Please sign in.");
+      router.push("/login");
     } catch {
       toast.error("Registration failed. Please try again.");
     } finally {
@@ -44,7 +42,7 @@ function RegisterForm() {
     try {
       await loginWithGoogle("google.user@gmail.com");
       toast.success("Signed in with Google!");
-      router.push(redirectTo);
+      router.push("/login");
     } catch {
       toast.error("Google sign in failed.");
     } finally {

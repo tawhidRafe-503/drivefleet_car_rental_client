@@ -1,8 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
 
 export const AuthContext = createContext(null);
 
@@ -25,10 +23,18 @@ function subscribeUser(callback) {
   };
 }
 
-export function AuthProvider({ children }) {
-  const syncedFor = useRef(null);
+function getRegisteredUsers() {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem("drivefleet_registered_users");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
 
-  // Subscribe to local storage external store without calling setState in an effect
+export function AuthProvider({ children }) {
+  // Reactive subscription to external local storage session store
   const rawUserJson = useSyncExternalStore(subscribeUser, getStoredUserSnapshot, getServerUserSnapshot);
 
   const user = useMemo(() => {
@@ -40,97 +46,99 @@ export function AuthProvider({ children }) {
     }
   }, [rawUserJson]);
 
+  // Persists active session state across app reloads and tabs
   const setLocalSession = (userData) => {
-    if (userData) {
-      localStorage.setItem("drivefleet_user", JSON.stringify(userData));
-      document.cookie = `df_session=${encodeURIComponent(userData.email)}; path=/; max-age=86400`;
-    } else {
-      localStorage.removeItem("drivefleet_user");
-      document.cookie = "df_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    }
     if (typeof window !== "undefined") {
+      if (userData) {
+        localStorage.setItem("drivefleet_user", JSON.stringify(userData));
+        localStorage.setItem("drivefleet_session", "active");
+        document.cookie = `df_session=${encodeURIComponent(userData.email)}; path=/; max-age=86400`;
+      } else {
+        localStorage.removeItem("drivefleet_user");
+        localStorage.removeItem("drivefleet_session");
+        document.cookie = "df_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      }
       window.dispatchEvent(new Event("drivefleet_session_change"));
     }
   };
 
-  const syncJwtCookie = async (email) => {
-    try {
-      await fetch(`${API_URL}/auth/jwt`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-    } catch {
-      // Ignore network errors asynchronously
-    }
-  };
+  const registerWithEmail = async ({ name, email, photoURL, password }) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const existingUsers = getRegisteredUsers();
 
-  useEffect(() => {
-    const email = user?.email;
-    if (email && syncedFor.current !== email) {
-      syncedFor.current = email;
-      syncJwtCookie(email);
+    if (existingUsers.some((u) => u.email.toLowerCase() === cleanEmail)) {
+      throw new Error("An account with this email already exists. Please sign in.");
     }
-    if (!email) {
-      syncedFor.current = null;
-    }
-  }, [user?.email]);
 
-  const clearJwtCookie = async () => {
-    try {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch {
-      // Ignore
+    const newUser = {
+      name: name || cleanEmail.split("@")[0] || "User",
+      email: cleanEmail,
+      image: photoURL || "",
+      password: password,
+    };
+
+    // Save user to registered accounts storage WITHOUT logging in automatically
+    const updatedUsers = [...existingUsers, newUser];
+    if (typeof window !== "undefined") {
+      localStorage.setItem("drivefleet_registered_users", JSON.stringify(updatedUsers));
     }
+
+    return { data: { user: newUser }, error: null };
   };
 
   const loginWithEmail = async (email, password) => {
-    const userData = {
-      name: email.split("@")[0] || "User",
-      email,
-      image: "",
-    };
-    setLocalSession(userData);
-    syncJwtCookie(email);
-    return { data: { user: userData }, error: null };
-  };
+    const cleanEmail = email.trim().toLowerCase();
+    const registeredUsers = getRegisteredUsers();
 
-  const registerWithEmail = async ({ name, email, photoURL, password }) => {
-    const userData = {
-      name: name || email.split("@")[0] || "User",
-      email,
-      image: photoURL || "",
+    // Verify user registration in registered users list
+    let foundUser = registeredUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (!foundUser) {
+      throw new Error("No registered account found with this email. Please register first.");
+    }
+
+    if (foundUser.password && foundUser.password !== password) {
+      throw new Error("Incorrect password. Please check your credentials.");
+    }
+
+    const sessionUser = {
+      name: foundUser.name,
+      email: foundUser.email,
+      image: foundUser.image || "",
     };
-    setLocalSession(userData);
-    syncJwtCookie(email);
-    return { data: { user: userData }, error: null };
+
+    // Save and dispatch active logged-in session state
+    setLocalSession(sessionUser);
+    return { data: { user: sessionUser }, error: null };
   };
 
   const loginWithGoogle = async (googleEmail) => {
-    const email = googleEmail?.trim() || "google.user@gmail.com";
+    const email = (googleEmail || "google.user@gmail.com").trim().toLowerCase();
     const rawName = email.split("@")[0] || "Google User";
     const formattedName = rawName.replace(/[._]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
-    const userData = {
+    const sessionUser = {
       name: formattedName,
       email,
       image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
       emailVerified: true,
     };
 
-    setLocalSession(userData);
-    syncJwtCookie(userData.email);
+    // Store in registered users list and save active logged-in session
+    const registeredUsers = getRegisteredUsers();
+    if (!registeredUsers.some((u) => u.email.toLowerCase() === email)) {
+      const updated = [...registeredUsers, { ...sessionUser, password: "google_social_auth" }];
+      if (typeof window !== "undefined") {
+        localStorage.setItem("drivefleet_registered_users", JSON.stringify(updated));
+      }
+    }
 
-    return { data: { user: userData }, error: null };
+    setLocalSession(sessionUser);
+    return { data: { user: sessionUser }, error: null };
   };
 
   const logout = async () => {
     setLocalSession(null);
-    clearJwtCookie();
   };
 
   const value = {
@@ -140,7 +148,6 @@ export function AuthProvider({ children }) {
     registerWithEmail,
     loginWithGoogle,
     logout,
-    syncJwtCookie,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
