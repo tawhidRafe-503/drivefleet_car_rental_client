@@ -25,23 +25,23 @@ export default function BookingModal({ open, onClose, onSuccess, car }) {
     try {
       const res = await fetch(`${API_URL}/bookings`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           carId: car._id || car.id,
           carName: car.carName || car.model,
-          dailyPrice: car.dailyPrice || car.pricePerDay,
+          dailyPrice: Number(car.dailyPrice || car.pricePerDay || 0),
           driverNeeded: driverNeeded === "yes",
           specialNote: note,
-          renterEmail: user.email,
+          renterEmail: user.email.toLowerCase(),
           bookingDate: new Date().toISOString(),
+          status: "Confirmed",
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.message || "Booking failed. Try again.");
       }
-      toast.success("Car booked successfully");
+      toast.success("Car booked successfully!");
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
