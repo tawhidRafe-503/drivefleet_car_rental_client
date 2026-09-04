@@ -19,7 +19,8 @@ export default function RootLayout({ children }) {
             __html: `
               (function() {
                 try {
-                  var t = localStorage.getItem('drivefleet_theme') || 'dark';
+                  var match = document.cookie.match(new RegExp('(^| )theme=([^;]+)'));
+                  var t = match ? match[2] : 'dark';
                   document.documentElement.setAttribute('data-theme', t);
                   document.documentElement.classList.remove('dark', 'light');
                   document.documentElement.classList.add(t);

@@ -16,6 +16,11 @@ export default function BookingModal({ open, onClose, onSuccess, car }) {
 
   const handleBook = async (e) => {
     e.preventDefault();
+    if (!user?.email) {
+      toast.error("Please sign in with a registered account to book a car.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch(`${API_URL}/bookings`, {
@@ -28,7 +33,7 @@ export default function BookingModal({ open, onClose, onSuccess, car }) {
           dailyPrice: car.dailyPrice || car.pricePerDay,
           driverNeeded: driverNeeded === "yes",
           specialNote: note,
-          renterEmail: user?.email || "user@drivefleet.com",
+          renterEmail: user.email,
           bookingDate: new Date().toISOString(),
         }),
       });

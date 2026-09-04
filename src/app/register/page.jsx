@@ -30,8 +30,8 @@ function RegisterForm() {
       await registerWithEmail({ name, email, photoURL, password });
       toast.success("Account registered successfully! Please sign in.");
       router.push("/login");
-    } catch {
-      toast.error("Registration failed. Please try again.");
+    } catch (err) {
+      toast.error(err?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -40,11 +40,9 @@ function RegisterForm() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      await loginWithGoogle("google.user@gmail.com");
-      toast.success("Signed in with Google!");
-      router.push("/login");
-    } catch {
-      toast.error("Google sign in failed.");
+      await loginWithGoogle("/");
+    } catch (err) {
+      toast.error(err?.message || "Google sign in failed.");
     } finally {
       setLoading(false);
     }

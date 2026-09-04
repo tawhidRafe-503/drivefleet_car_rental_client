@@ -35,11 +35,9 @@ function LoginForm() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      await loginWithGoogle("google.user@gmail.com");
-      toast.success("Logged in with Google!");
-      router.push(redirectTo);
-    } catch {
-      toast.error("Google sign in failed.");
+      await loginWithGoogle(redirectTo);
+    } catch (err) {
+      toast.error(err?.message || "Google sign in failed.");
     } finally {
       setLoading(false);
     }
@@ -113,6 +111,7 @@ function LoginForm() {
       </div>
 
       <button
+        type="button"
         onClick={handleGoogleLogin}
         disabled={loading}
         className="theme-card flex w-full items-center justify-center gap-2.5 rounded-xl border py-3 text-sm font-semibold transition hover:border-cyan-500 disabled:opacity-50 cursor-pointer"

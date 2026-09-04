@@ -1,45 +1,23 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { HiSun, HiMoon } from "react-icons/hi";
 
-function subscribeTheme(callback) {
-  if (typeof window === "undefined") return () => {};
-  window.addEventListener("storage", callback);
-  window.addEventListener("drivefleet_theme_change", callback);
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener("drivefleet_theme_change", callback);
-  };
-}
-
-function getThemeSnapshot() {
-  if (typeof window === "undefined") return "dark";
-  return localStorage.getItem("drivefleet_theme") || "dark";
-}
-
-function getServerThemeSnapshot() {
-  return "dark";
-}
-
 export default function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getServerThemeSnapshot);
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    document.documentElement.classList.remove("dark", "light");
-    document.documentElement.classList.add(theme);
-  }, [theme]);
+  const [theme, setTheme] = useState(() => {
+    if (typeof document !== "undefined") {
+      return document.documentElement.getAttribute("data-theme") || "dark";
+    }
+    return "dark";
+  });
 
   const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    localStorage.setItem("drivefleet_theme", newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
     document.documentElement.classList.remove("dark", "light");
-    document.documentElement.classList.add(newTheme);
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("drivefleet_theme_change"));
-    }
+    document.documentElement.classList.add(nextTheme);
+    document.cookie = `theme=${nextTheme}; path=/; max-age=31536000`;
   };
 
   return (
