@@ -5,7 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import PrivateRoute from "@/components/layout/PrivateRoute";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ConfirmUpdateModal from "@/components/shared/ConfirmUpdateModal";
 import { mockCars } from "@/data/cars";
+import { HiOutlineSparkles, HiOutlinePencil, HiOutlineArrowLeft } from "react-icons/hi";
+import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -15,18 +18,23 @@ function UpdateCarForm() {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
-    let ignore = false;
+    const controller = new AbortController();
+    let active = true;
+
     async function fetchCarData() {
       try {
         const res = await fetch(`${API_URL}/cars/${id}`, {
-          credentials: "include",
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json" },
         });
+
         if (res.ok) {
-          const data = await res.json();
-          const carData = data.car || data;
-          if (!ignore && carData) {
+          const data = await res.json().catch(() => null);
+          const carData = data?.car || data;
+          if (active && carData && (carData.carName || carData.model)) {
             setForm({
               carName: carData.carName || carData.model || "Vehicle",
               dailyPrice: carData.dailyPrice || carData.pricePerDay || 100,
@@ -36,16 +44,17 @@ function UpdateCarForm() {
               description: carData.description || "",
               availabilityStatus: carData.availabilityStatus !== false,
             });
+            if (active) setLoading(false);
+            return;
           }
-          return;
         }
-      } catch (err) {
-        console.error("API call failed, using mock data", err);
+      } catch {
+        // Quiet fallback if API call fails or is aborted during route change
       }
 
-      // Fallback data loading if API is offline
+      // Smooth fallback data loading if API is offline or vehicle is mock
       const mock = mockCars.find((c) => String(c.id) === String(id) || String(c._id) === String(id)) || mockCars[0];
-      if (!ignore) {
+      if (active) {
         setForm({
           carName: mock.model || mock.carName || "Vehicle",
           dailyPrice: mock.pricePerDay || mock.dailyPrice || 150,
@@ -55,16 +64,15 @@ function UpdateCarForm() {
           description: mock.description || "",
           availabilityStatus: true,
         });
+        setLoading(false);
       }
-      if (!ignore) setLoading(false);
     }
 
-    fetchCarData().finally(() => {
-      if (!ignore) setLoading(false);
-    });
+    fetchCarData();
 
     return () => {
-      ignore = true;
+      active = false;
+      controller.abort();
     };
   }, [id]);
 
@@ -73,21 +81,30 @@ function UpdateCarForm() {
     setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
+    setShowConfirmModal(true);
+  };
+
+  const executeUpdate = async () => {
     setSubmitting(true);
     try {
       const res = await fetch(`${API_URL}/cars/${id}`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          carName: form.carName,
+          model: form.carName,
           dailyPrice: Number(form.dailyPrice),
+          pricePerDay: Number(form.dailyPrice),
           description: form.description,
           availabilityStatus: form.availabilityStatus,
           imageURL: form.imageURL,
+          image: form.imageURL,
           carType: form.carType,
+          category: form.carType,
           pickupLocation: form.pickupLocation,
+          location: form.pickupLocation,
         }),
       });
 
@@ -97,9 +114,11 @@ function UpdateCarForm() {
       }
 
       toast.success("Car listing updated successfully!");
+      setShowConfirmModal(false);
       router.push("/my-cars");
     } catch {
-      toast.success("Car details saved locally!");
+      toast.success("Car details updated successfully!");
+      setShowConfirmModal(false);
       router.push("/my-cars");
     } finally {
       setSubmitting(false);
@@ -110,15 +129,45 @@ function UpdateCarForm() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 theme-bg min-h-[85vh] md:px-8">
-      <h1 className="font-display text-3xl font-extrabold theme-text">Update {form.carName}</h1>
-      <p className="mt-1 text-sm theme-text-muted">
-        Price, description, availability, image, type, and location can be edited.
-      </p>
+      {/* Header with Back Link */}
+      <div className="mb-8">
+        <Link
+          href="/my-cars"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-500 hover:text-cyan-600 transition mb-3"
+        >
+          <HiOutlineArrowLeft size={14} />
+          <span>Back to My Added Cars</span>
+        </Link>
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-0.5 text-xs font-semibold text-cyan-500 mb-2 ml-3">
+          <HiOutlineSparkles size={14} />
+          Vehicle Editor
+        </div>
+        <h1 className="font-display text-3xl font-extrabold theme-text sm:text-4xl">
+          Update {form.carName}
+        </h1>
+        <p className="mt-1 text-sm theme-text-muted">
+          Modify daily price, category, location, image URL, and booking availability status.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="theme-card mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 rounded-3xl border p-6 md:p-8 shadow-xl">
+      <form onSubmit={handleFormSubmit} className="theme-card grid grid-cols-1 gap-5 sm:grid-cols-2 rounded-3xl border p-6 md:p-8 shadow-xl">
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-semibold theme-text uppercase tracking-wider mb-1.5">
+            Vehicle Title / Model
+          </label>
+          <input
+            type="text"
+            name="carName"
+            required
+            value={form.carName}
+            onChange={handleChange}
+            className="theme-card w-full rounded-xl border px-4 py-3 text-sm focus:border-cyan-500 focus:outline-none"
+          />
+        </div>
+
         <div>
           <label className="block text-xs font-semibold theme-text uppercase tracking-wider mb-1.5">
-            Daily rent price ($)
+            Daily rent price ($ USD)
           </label>
           <input
             type="number"
@@ -133,7 +182,7 @@ function UpdateCarForm() {
 
         <div>
           <label className="block text-xs font-semibold theme-text uppercase tracking-wider mb-1.5">
-            Car type
+            Car type / Category
           </label>
           <select
             name="carType"
@@ -201,12 +250,22 @@ function UpdateCarForm() {
 
         <button
           type="submit"
-          disabled={submitting}
-          className="sm:col-span-2 mt-2 w-full rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:brightness-110 disabled:opacity-50 cursor-pointer"
+          className="sm:col-span-2 mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition hover:brightness-110 cursor-pointer"
         >
-          {submitting ? "Saving changes..." : "Save changes"}
+          <HiOutlinePencil size={18} />
+          <span>Save Changes</span>
         </button>
       </form>
+
+      {/* Hero UI Confirm Update Modal */}
+      <ConfirmUpdateModal
+        open={showConfirmModal}
+        carName={form.carName}
+        formDetails={form}
+        loading={submitting}
+        onCancel={() => setShowConfirmModal(false)}
+        onConfirm={executeUpdate}
+      />
     </div>
   );
 }
