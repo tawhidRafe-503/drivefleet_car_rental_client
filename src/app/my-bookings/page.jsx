@@ -5,6 +5,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import PrivateRoute from "@/components/layout/PrivateRoute";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { useAuth } from "@/providers/AuthProvider";
 import { HiOutlineCalendar, HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle } from "react-icons/hi";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
@@ -23,9 +24,8 @@ function UpdateBookingModal({ open, booking, onClose, onSuccess }) {
     e.preventDefault();
     setUpdating(true);
     try {
-      const res = await fetch(`${API_URL}/bookings/${booking._id}`, {
+      const res = await fetch(`${API_URL}/bookings/${booking._id || booking.id}`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingDate: new Date(bookingDate).toISOString(),
@@ -41,7 +41,7 @@ function UpdateBookingModal({ open, booking, onClose, onSuccess }) {
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      toast.error(err.message || "Could not update booking. Try again.");
+      toast.error(err?.message || "Could not update booking. Try again.");
     } finally {
       setUpdating(false);
     }
@@ -123,9 +123,9 @@ function CancelBookingModal({ open, booking, onClose, onSuccess }) {
   const handleCancel = async () => {
     setCanceling(true);
     try {
-      const res = await fetch(`${API_URL}/bookings/${booking._id}`, {
+      const res = await fetch(`${API_URL}/bookings/${booking._id || booking.id}`, {
         method: "DELETE",
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -135,7 +135,7 @@ function CancelBookingModal({ open, booking, onClose, onSuccess }) {
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      toast.error(err.message || "Could not cancel booking. Try again.");
+      toast.error(err?.message || "Could not cancel booking. Try again.");
     } finally {
       setCanceling(false);
     }
@@ -176,54 +176,71 @@ function CancelBookingModal({ open, booking, onClose, onSuccess }) {
 }
 
 function MyBookingsTable() {
+  const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingBooking, setEditingBooking] = useState(null);
   const [cancelingBooking, setCancelingBooking] = useState(null);
 
   useEffect(() => {
-    let ignore = false;
+    const controller = new AbortController();
+    let active = true;
+
     async function loadData() {
+      const email = user?.email || "";
+      const fetchUrl = email
+        ? `${API_URL}/bookings/my-bookings?email=${encodeURIComponent(email)}`
+        : `${API_URL}/bookings/my-bookings`;
+
       try {
-        const res = await fetch(`${API_URL}/bookings/my-bookings`, {
-          credentials: "include",
+        const res = await fetch(fetchUrl, {
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json" },
         });
+
         if (res.ok) {
-          const data = await res.json();
-          if (!ignore) {
-            setBookings(data.bookings || data || []);
-          }
-        } else if (!ignore) {
+          const data = await res.json().catch(() => []);
+          const list = data?.bookings || data || [];
+          if (active) setBookings(Array.isArray(list) ? list : []);
+        } else if (active) {
           setBookings([]);
         }
       } catch (err) {
-        console.error("Failed to fetch my bookings:", err);
-        if (!ignore) {
+        if (err.name !== "AbortError" && active) {
           setBookings([]);
         }
       } finally {
-        if (!ignore) {
+        if (active) {
           setLoading(false);
         }
       }
     }
+
     loadData();
+
     return () => {
-      ignore = true;
+      active = false;
+      controller.abort();
     };
-  }, []);
+  }, [user]);
 
   const refreshBookings = async () => {
+    const email = user?.email || "";
+    const fetchUrl = email
+      ? `${API_URL}/bookings/my-bookings?email=${encodeURIComponent(email)}`
+      : `${API_URL}/bookings/my-bookings`;
+
     try {
-      const res = await fetch(`${API_URL}/bookings/my-bookings`, {
-        credentials: "include",
+      const res = await fetch(fetchUrl, {
+        headers: { "Content-Type": "application/json" },
       });
       if (res.ok) {
-        const data = await res.json();
-        setBookings(data.bookings || data || []);
+        const data = await res.json().catch(() => []);
+        const list = data?.bookings || data || [];
+        setBookings(Array.isArray(list) ? list : []);
       }
-    } catch (err) {
-      console.error("Failed to refresh bookings:", err);
+    } catch {
+      // Quiet error resolution
     }
   };
 
@@ -268,7 +285,7 @@ function MyBookingsTable() {
               </thead>
               <tbody className="divide-y theme-border">
                 {bookings.map((b) => (
-                  <tr key={b._id} className="transition hover:bg-cyan-500/5">
+                  <tr key={b._id || b.id} className="transition hover:bg-cyan-500/5">
                     <td className="px-5 py-4 font-semibold theme-text">{b.carName}</td>
                     <td className="px-5 py-4 font-bold text-cyan-500">${b.dailyPrice}/day</td>
                     <td className="px-5 py-4">
@@ -317,7 +334,7 @@ function MyBookingsTable() {
       )}
 
       <UpdateBookingModal
-        key={editingBooking?._id || "none"}
+        key={editingBooking?._id || editingBooking?.id || "none"}
         open={!!editingBooking}
         booking={editingBooking}
         onClose={() => setEditingBooking(null)}
