@@ -7,13 +7,16 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 async function getFeaturedCars() {
   try {
-    const res = await fetch(`${API_URL}/cars?limit=6`, {
+    const res = await fetch(`${API_URL}/cars?featured=true&limit=6`, {
       cache: "no-store",
     });
     if (res.ok) {
       const data = await res.json();
       const list = data.cars || data || [];
-      if (Array.isArray(list) && list.length > 0) return list;
+      if (Array.isArray(list) && list.length > 0) {
+        // Exclude user-added cars from home page featured list
+        return list.filter((car) => !car.isUserAdded).slice(0, 6);
+      }
     }
   } catch {
     // API connection offline or pending

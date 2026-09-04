@@ -3,31 +3,47 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import axios from "axios";
 import toast from "react-hot-toast";
 import PrivateRoute from "@/components/layout/PrivateRoute";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ConfirmDeleteModal from "@/components/shared/ConfirmDeleteModal";
+import { useAuth } from "@/providers/AuthProvider";
+import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSparkles, HiOutlineTruck } from "react-icons/hi";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 function MyCarsGrid() {
+  const { user } = useAuth();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [target, setTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
     let active = true;
 
-    axios
-      .get(`${API_URL}/cars/my-cars`, { withCredentials: true })
-      .then((res) => {
-        if (active) setCars(res.data.cars || res.data || []);
+    const email = user?.email || "";
+    const fetchUrl = email
+      ? `${API_URL}/cars/my-cars?email=${encodeURIComponent(email)}`
+      : `${API_URL}/cars/my-cars`;
+
+    fetch(fetchUrl, {
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json" },
+    })
+      .then(async (res) => {
+        if (!res.ok) return [];
+        const data = await res.json().catch(() => []);
+        return data.cars || data || [];
+      })
+      .then((data) => {
+        if (active) setCars(Array.isArray(data) ? data : []);
       })
       .catch((err) => {
-        console.error("Failed to fetch my cars:", err);
-        if (active) setCars([]);
+        if (err.name !== "AbortError" && active) {
+          setCars([]);
+        }
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -35,17 +51,26 @@ function MyCarsGrid() {
 
     return () => {
       active = false;
+      controller.abort();
     };
-  }, []);
+  }, [user]);
 
   const handleDelete = async () => {
+    if (!target) return;
     setDeleting(true);
     try {
-      await axios.delete(`${API_URL}/cars/${target._id}`, { withCredentials: true });
-      setCars((prev) => prev.filter((c) => c._id !== target._id));
-      toast.success("Car listing deleted");
+      const res = await fetch(`${API_URL}/cars/${target._id || target.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || "Couldn't delete this car.");
+      }
+      setCars((prev) => prev.filter((c) => (c._id || c.id) !== (target._id || target.id)));
+      toast.success("Car listing deleted successfully");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Couldn't delete this car. Try again.");
+      toast.error(err?.message || "Couldn't delete this car. Try again.");
     } finally {
       setDeleting(false);
       setTarget(null);
@@ -55,43 +80,83 @@ function MyCarsGrid() {
   if (loading) return <LoadingSpinner full />;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 md:px-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto max-w-6xl px-4 py-12 theme-bg min-h-[85vh] md:px-8">
+      {/* Page Header with Action Button */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8 pb-6 border-b theme-border">
         <div>
-          <h1 className="font-display text-3xl font-extrabold">My added cars</h1>
-          <p className="mt-1 text-base-content/60">Manage the vehicles you&apos;ve listed.</p>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-0.5 text-xs font-semibold text-cyan-500 mb-2">
+            <HiOutlineSparkles size={14} />
+            Vehicle Fleet Management
+          </div>
+          <h1 className="font-display text-3xl font-extrabold theme-text sm:text-4xl">My Added Cars</h1>
+          <p className="mt-1 text-sm theme-text-muted">
+            Manage, update, or expand your vehicle listings available for bookings.
+          </p>
         </div>
-        <Link href="/add-car" className="btn btn-primary rounded-full">
-          Add another car
+
+        {/* Designed "Add another car" Button */}
+        <Link
+          href="/add-car"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-linear-to-r from-cyan-500 via-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition-all duration-300 hover:scale-105 hover:shadow-cyan-500/40 hover:brightness-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 cursor-pointer self-start sm:self-auto"
+        >
+          <HiOutlinePlus size={18} className="transition-transform duration-300 group-hover:rotate-90" />
+          <span>Add Another Car</span>
         </Link>
       </div>
 
       {cars.length === 0 ? (
-        <p className="mt-16 text-center text-base-content/60">
-          You haven&apos;t listed any cars yet.
-        </p>
+        <div className="theme-card rounded-3xl border p-12 text-center shadow-xl mt-8 max-w-xl mx-auto">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-500 mb-4">
+            <HiOutlineTruck size={32} />
+          </div>
+          <h3 className="font-display text-xl font-bold theme-text mb-2">No Vehicles Listed Yet</h3>
+          <p className="theme-text-muted text-sm mb-6">
+            You haven&apos;t listed any cars yet. Start earning by adding your vehicle to DriveFleet today!
+          </p>
+          <Link
+            href="/add-car"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-linear-to-r from-cyan-500 via-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition-all duration-300 hover:scale-105 hover:brightness-110 active:scale-95 cursor-pointer"
+          >
+            <HiOutlinePlus size={18} />
+            <span>Add Your First Car</span>
+          </Link>
+        </div>
       ) : (
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {cars.map((car) => (
-            <div key={car._id} className="overflow-hidden rounded-2xl border border-base-300">
-              <div className="relative h-36 w-full bg-base-200">
-                {car.imageURL ? (
-                  <Image src={car.imageURL} alt={car.carName} fill className="object-cover" />
+            <div key={car._id || car.id} className="theme-card overflow-hidden rounded-2xl border shadow-lg transition-all duration-300 hover:border-cyan-500/40 hover:shadow-cyan-500/10">
+              <div className="relative h-44 w-full bg-slate-800/20">
+                {car.imageURL || car.image ? (
+                  <Image src={car.imageURL || car.image} alt={car.carName || car.model || "Vehicle"} fill className="object-cover transition-transform duration-500 hover:scale-105" />
                 ) : (
                   <div className="flex h-full items-center justify-center text-4xl">🚗</div>
                 )}
               </div>
-              <div className="p-4">
-                <p className="font-display font-semibold">{car.carName}</p>
-                <p className="mt-1 text-sm text-base-content/60">
-                  ${car.dailyPrice}/day · {car.carType}
+              <div className="p-5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-display font-bold theme-text text-base truncate">{car.carName || car.model}</p>
+                  <span className="rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-cyan-500 border border-cyan-500/20">
+                    {car.carType || car.category || "Sedan"}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm font-semibold text-cyan-500">
+                  ${car.dailyPrice || car.pricePerDay} <span className="text-xs theme-text-muted font-normal">/ day</span>
                 </p>
-                <div className="mt-4 flex gap-2">
-                  <Link href={`/my-cars/update/${car._id}`} className="btn btn-outline btn-sm flex-1 rounded-full">
-                    Update
+                <div className="mt-5 flex gap-2.5 pt-3 border-t theme-border">
+                  <Link
+                    href={`/my-cars/update/${car._id || car.id}`}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border theme-border px-3 py-2 text-xs font-semibold theme-text hover:bg-slate-500/10 hover:border-cyan-500/40 transition cursor-pointer"
+                  >
+                    <HiOutlinePencil size={14} />
+                    <span>Update</span>
                   </Link>
-                  <button onClick={() => setTarget(car)} className="btn btn-error btn-sm flex-1 rounded-full text-white">
-                    Delete
+                  <button
+                    type="button"
+                    onClick={() => setTarget(car)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 px-3 py-2 text-xs font-semibold hover:bg-red-500/20 transition cursor-pointer"
+                  >
+                    <HiOutlineTrash size={14} />
+                    <span>Delete</span>
                   </button>
                 </div>
               </div>
@@ -102,7 +167,7 @@ function MyCarsGrid() {
 
       <ConfirmDeleteModal
         open={!!target}
-        title={target?.carName}
+        title={target?.carName || target?.model}
         loading={deleting}
         onCancel={() => setTarget(null)}
         onConfirm={handleDelete}

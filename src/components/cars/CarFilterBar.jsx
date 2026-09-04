@@ -23,10 +23,13 @@ export default function CarFilterBar() {
   const activeType = searchParams.get("type") || "All";
 
   const handleSearchSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const params = new URLSearchParams();
     if (search.trim()) {
       params.set("search", search.trim());
+    }
+    if (activeType && activeType !== "All") {
+      params.set("type", activeType);
     }
     router.push(`/cars?${params.toString()}`);
   };
@@ -68,7 +71,7 @@ export default function CarFilterBar() {
           <button
             type="button"
             onClick={handleClearSearch}
-            className="absolute right-12 text-slate-400 hover:text-slate-600 dark:hover:text-white transition p-1"
+            className="absolute right-12 text-slate-400 hover:text-slate-600 dark:hover:text-white transition p-1 cursor-pointer"
             aria-label="Clear search"
           >
             <HiOutlineX size={16} />

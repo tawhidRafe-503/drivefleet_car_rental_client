@@ -6,34 +6,47 @@ import { mockCars } from "@/data/cars";
 
 async function getCars(searchParams) {
   const params = new URLSearchParams();
-  if (searchParams?.search) params.set("search", searchParams.search);
-  if (searchParams?.type) params.set("type", searchParams.type);
+  const search = (searchParams?.search || "").trim();
+  const type = (searchParams?.type || "").trim();
 
+  if (search) params.set("search", search);
+  if (type && type.toLowerCase() !== "all") params.set("type", type);
+
+  let fetchedCars = [];
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cars?${params.toString()}`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error("API not available");
     const data = await res.json();
-    return data.cars || data || [];
+    fetchedCars = data.cars || data || [];
   } catch {
-    // Fallback filtering over mockCars dataset if backend API is offline
-    const search = (searchParams?.search || "").trim().toLowerCase();
-    const type = (searchParams?.type || "All").trim().toLowerCase();
-
-    return mockCars.filter((car) => {
-      const model = (car.model || car.carName || "").toLowerCase();
-      const location = (car.location || car.pickupLocation || "").toLowerCase();
-      const category = (car.category || car.carType || "").toLowerCase();
-
-      const matchesSearch =
-        !search || model.includes(search) || location.includes(search) || category.includes(search);
-
-      const matchesType = type === "all" || category === type || category.includes(type);
-
-      return matchesSearch && matchesType;
-    });
+    fetchedCars = mockCars;
   }
+
+  // Robust double-check filtering over the returned dataset
+  const searchLower = search.toLowerCase();
+  const typeLower = type.toLowerCase();
+
+  return fetchedCars.filter((car) => {
+    const model = (car.model || car.carName || "").toLowerCase();
+    const location = (car.location || car.pickupLocation || "").toLowerCase();
+    const category = (car.category || car.carType || "").toLowerCase();
+
+    const matchesSearch =
+      !searchLower ||
+      model.includes(searchLower) ||
+      location.includes(searchLower) ||
+      category.includes(searchLower);
+
+    const matchesType =
+      !typeLower ||
+      typeLower === "all" ||
+      category === typeLower ||
+      category.includes(typeLower);
+
+    return matchesSearch && matchesType;
+  });
 }
 
 export default async function ExploreCarsPage({ searchParams }) {
