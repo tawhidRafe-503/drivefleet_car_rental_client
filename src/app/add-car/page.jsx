@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { HiOutlinePlus, HiOutlineSparkles } from "react-icons/hi";
+import { useAuth } from "@/providers/AuthProvider";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export default function AddCarPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     model: "",
     category: "Sedan",
@@ -15,11 +22,39 @@ export default function AddCarPage() {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      toast.success(`"${formData.model || "Vehicle"}" added successfully!`);
+
+    const payload = {
+      carName: formData.model.trim(),
+      model: formData.model.trim(),
+      category: formData.category,
+      dailyPrice: Number(formData.pricePerDay),
+      pricePerDay: Number(formData.pricePerDay),
+      location: formData.location.trim(),
+      description: formData.description.trim(),
+      image: formData.image.trim(),
+      userEmail: user?.email || "",
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const res = await fetch(`${API_URL}/cars`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to add car to backend");
+      }
+
+      toast.success(`"${formData.model}" added successfully!`);
       setFormData({
         model: "",
         category: "Sedan",
@@ -28,8 +63,12 @@ export default function AddCarPage() {
         description: "",
         image: "",
       });
+      router.push("/cars");
+    } catch (err) {
+      toast.error(err?.message || "Failed to connect to backend server.");
+    } finally {
       setLoading(false);
-    }, 400);
+    }
   };
 
   return (
