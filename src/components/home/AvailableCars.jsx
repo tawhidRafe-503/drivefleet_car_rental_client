@@ -3,7 +3,7 @@ import CarCard from "../cars/CarCard";
 import { mockCars } from "@/data/cars";
 import { HiOutlineSparkles, HiOutlineArrowRight } from "react-icons/hi";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 async function getFeaturedCars() {
   try {

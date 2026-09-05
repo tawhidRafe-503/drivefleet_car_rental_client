@@ -9,7 +9,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { getBetterAuthHeaders } from "@/lib/getBetterAuthToken";
 import { HiOutlineCalendar, HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle } from "react-icons/hi";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 function UpdateBookingModal({ open, booking, onClose, onSuccess }) {
   const [bookingDate, setBookingDate] = useState(() =>

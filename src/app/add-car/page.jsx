@@ -7,7 +7,7 @@ import { HiOutlinePlus, HiOutlineSparkles } from "react-icons/hi";
 import { useAuth } from "@/providers/AuthProvider";
 import { getBetterAuthHeaders } from "@/lib/getBetterAuthToken";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function AddCarPage() {
   const { user } = useAuth();

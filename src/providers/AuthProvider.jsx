@@ -21,32 +21,46 @@ export function AuthProvider({ children }) {
 
   const registerWithEmail = async ({ name, email, photoURL, password }) => {
     const cleanEmail = email.trim().toLowerCase();
-    const res = await signUp.email({
-      email: cleanEmail,
-      password: password,
-      name: name || cleanEmail.split("@")[0] || "User",
-      image: photoURL || "",
-    });
+    try {
+      const res = await signUp.email({
+        email: cleanEmail,
+        password: password,
+        name: name || cleanEmail.split("@")[0] || "User",
+        image: photoURL || "",
+      });
 
-    if (res?.error) {
-      throw new Error(res.error.message || "Registration failed");
+      if (res?.error) {
+        throw new Error(res.error.message || "Registration failed. Please check your details.");
+      }
+
+      return { data: { user: { name, email: cleanEmail, image: photoURL } }, error: null };
+    } catch (err) {
+      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
+        throw new Error("Cannot connect to auth service. Please make sure the Next.js server is running on http://localhost:3000.");
+      }
+      throw err;
     }
-
-    return { data: { user: { name, email: cleanEmail, image: photoURL } }, error: null };
   };
 
   const loginWithEmail = async (email, password) => {
     const cleanEmail = email.trim().toLowerCase();
-    const res = await signIn.email({
-      email: cleanEmail,
-      password: password,
-    });
+    try {
+      const res = await signIn.email({
+        email: cleanEmail,
+        password: password,
+      });
 
-    if (res?.error) {
-      throw new Error(res.error.message || "Failed to sign in");
+      if (res?.error) {
+        throw new Error(res.error.message || "Invalid email or password.");
+      }
+
+      return { data: { user: { email: cleanEmail } }, error: null };
+    } catch (err) {
+      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
+        throw new Error("Cannot connect to auth service. Please check your connection or server status.");
+      }
+      throw err;
     }
-
-    return { data: { user: { email: cleanEmail } }, error: null };
   };
 
   const loginWithGoogle = async (callbackURL = "/") => {

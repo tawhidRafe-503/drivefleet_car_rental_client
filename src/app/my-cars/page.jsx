@@ -11,7 +11,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { getBetterAuthHeaders } from "@/lib/getBetterAuthToken";
 import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSparkles, HiOutlineTruck } from "react-icons/hi";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 function MyCarsGrid() {
   const { user } = useAuth();

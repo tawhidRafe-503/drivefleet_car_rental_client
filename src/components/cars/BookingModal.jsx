@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "@/providers/AuthProvider";
 import { getBetterAuthHeaders } from "@/lib/getBetterAuthToken";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function BookingModal({ open, onClose, onSuccess, car }) {
   const { user } = useAuth();

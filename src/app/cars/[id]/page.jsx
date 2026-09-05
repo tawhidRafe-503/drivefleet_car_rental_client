@@ -5,7 +5,7 @@ import { mockCars } from "@/data/cars";
 
 async function getCar(id) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/cars/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/cars/${id}`, {
       cache: "no-store",
     });
     if (res.ok) {
