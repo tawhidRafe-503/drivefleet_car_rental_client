@@ -9,7 +9,7 @@ export async function getBetterAuthHeaders() {
         ? window.location.origin
         : process.env.NEXT_PUBLIC_BETTER_AUTH_URL || process.env.BETTER_AUTH_URL || "http://localhost:3000";
 
-    const res = await fetch(`${origin}/api/auth/jwt`, { cache: "no-store" }).catch(() => null);
+    const res = await fetch(`${origin}/api/auth/jwt`, { cache: "no-store", credentials: "include" }).catch(() => null);
     if (res && res.ok) {
       const data = await res.json().catch(() => ({}));
       const token = data?.token || data?.jwt;
