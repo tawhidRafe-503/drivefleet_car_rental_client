@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import PrivateRoute from "@/components/layout/PrivateRoute";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { useAuth } from "@/providers/AuthProvider";
+import { getBetterAuthHeaders } from "@/lib/getBetterAuthToken";
 import { HiOutlineCalendar, HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle } from "react-icons/hi";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
@@ -24,9 +25,10 @@ function UpdateBookingModal({ open, booking, onClose, onSuccess }) {
     e.preventDefault();
     setUpdating(true);
     try {
+      const headers = await getBetterAuthHeaders();
       const res = await fetch(`${API_URL}/bookings/${booking._id || booking.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           bookingDate: new Date(bookingDate).toISOString(),
           driverNeeded,
@@ -123,9 +125,10 @@ function CancelBookingModal({ open, booking, onClose, onSuccess }) {
   const handleCancel = async () => {
     setCanceling(true);
     try {
+      const headers = await getBetterAuthHeaders();
       const res = await fetch(`${API_URL}/bookings/${booking._id || booking.id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -193,9 +196,10 @@ function MyBookingsTable() {
         : `${API_URL}/bookings/my-bookings`;
 
       try {
+        const headers = await getBetterAuthHeaders();
         const res = await fetch(fetchUrl, {
           signal: controller.signal,
-          headers: { "Content-Type": "application/json" },
+          headers,
         });
 
         if (res.ok) {
@@ -231,8 +235,9 @@ function MyBookingsTable() {
       : `${API_URL}/bookings/my-bookings`;
 
     try {
+      const headers = await getBetterAuthHeaders();
       const res = await fetch(fetchUrl, {
-        headers: { "Content-Type": "application/json" },
+        headers,
       });
       if (res.ok) {
         const data = await res.json().catch(() => []);

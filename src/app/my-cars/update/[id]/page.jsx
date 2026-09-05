@@ -7,6 +7,7 @@ import PrivateRoute from "@/components/layout/PrivateRoute";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ConfirmUpdateModal from "@/components/shared/ConfirmUpdateModal";
 import { mockCars } from "@/data/cars";
+import { getBetterAuthHeaders } from "@/lib/getBetterAuthToken";
 import { HiOutlineSparkles, HiOutlinePencil, HiOutlineArrowLeft } from "react-icons/hi";
 import Link from "next/link";
 
@@ -89,9 +90,10 @@ function UpdateCarForm() {
   const executeUpdate = async () => {
     setSubmitting(true);
     try {
+      const headers = await getBetterAuthHeaders();
       const res = await fetch(`${API_URL}/cars/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           carName: form.carName,
           model: form.carName,

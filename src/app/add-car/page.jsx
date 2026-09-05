@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { HiOutlinePlus, HiOutlineSparkles } from "react-icons/hi";
 import { useAuth } from "@/providers/AuthProvider";
+import { getBetterAuthHeaders } from "@/lib/getBetterAuthToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -40,11 +41,10 @@ export default function AddCarPage() {
     };
 
     try {
+      const headers = await getBetterAuthHeaders();
       const res = await fetch(`${API_URL}/cars`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 

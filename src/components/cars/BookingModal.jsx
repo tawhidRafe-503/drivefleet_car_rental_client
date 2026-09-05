@@ -3,6 +3,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/providers/AuthProvider";
+import { getBetterAuthHeaders } from "@/lib/getBetterAuthToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -23,9 +24,10 @@ export default function BookingModal({ open, onClose, onSuccess, car }) {
 
     setSubmitting(true);
     try {
+      const headers = await getBetterAuthHeaders();
       const res = await fetch(`${API_URL}/bookings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           carId: car._id || car.id,
           carName: car.carName || car.model,

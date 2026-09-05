@@ -8,6 +8,7 @@ import PrivateRoute from "@/components/layout/PrivateRoute";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ConfirmDeleteModal from "@/components/shared/ConfirmDeleteModal";
 import { useAuth } from "@/providers/AuthProvider";
+import { getBetterAuthHeaders } from "@/lib/getBetterAuthToken";
 import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineSparkles, HiOutlineTruck } from "react-icons/hi";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
@@ -23,31 +24,36 @@ function MyCarsGrid() {
     const controller = new AbortController();
     let active = true;
 
-    const email = user?.email || "";
-    const fetchUrl = email
-      ? `${API_URL}/cars/my-cars?email=${encodeURIComponent(email)}`
-      : `${API_URL}/cars/my-cars`;
+    async function loadMyCars() {
+      const email = user?.email || "";
+      const fetchUrl = email
+        ? `${API_URL}/cars/my-cars?email=${encodeURIComponent(email)}`
+        : `${API_URL}/cars/my-cars`;
 
-    fetch(fetchUrl, {
-      signal: controller.signal,
-      headers: { "Content-Type": "application/json" },
-    })
-      .then(async (res) => {
-        if (!res.ok) return [];
-        const data = await res.json().catch(() => []);
-        return data.cars || data || [];
-      })
-      .then((data) => {
-        if (active) setCars(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
+      try {
+        const headers = await getBetterAuthHeaders();
+        const res = await fetch(fetchUrl, {
+          signal: controller.signal,
+          headers,
+        });
+
+        if (res.ok) {
+          const data = await res.json().catch(() => []);
+          const list = data?.cars || data || [];
+          if (active) setCars(Array.isArray(list) ? list : []);
+        } else if (active) {
+          setCars([]);
+        }
+      } catch (err) {
         if (err.name !== "AbortError" && active) {
           setCars([]);
         }
-      })
-      .finally(() => {
+      } finally {
         if (active) setLoading(false);
-      });
+      }
+    }
+
+    loadMyCars();
 
     return () => {
       active = false;
@@ -59,9 +65,10 @@ function MyCarsGrid() {
     if (!target) return;
     setDeleting(true);
     try {
+      const headers = await getBetterAuthHeaders();
       const res = await fetch(`${API_URL}/cars/${target._id || target.id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
