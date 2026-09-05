@@ -2,12 +2,18 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import jwt from "jsonwebtoken";
 
-export async function GET() {
+export async function GET(request) {
   try {
     const reqHeaders = await headers();
-    const session = await auth.api.getSession({
+    let session = await auth.api.getSession({
       headers: reqHeaders,
-    });
+    }).catch(() => null);
+
+    if ((!session || !session.user) && request?.headers) {
+      session = await auth.api.getSession({
+        headers: request.headers,
+      }).catch(() => null);
+    }
 
     if (!session || !session.user) {
       return Response.json(
